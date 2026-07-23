@@ -42,16 +42,37 @@ export class ExamCatalogService {
     return paginate(data, total, query.page, query.limit);
   }
 
-  async getBySlug(slug: string): Promise<ExamProduct> {
-    const product = await this.products.findOne({
-      where: { slug, isPublished: true },
+  /**
+   * Public detail lookup. Accepts a slug OR a cert code (case-insensitive) so
+   * the frontend can navigate straight from a cert code like `SY0-701` without
+   * a separate id-resolution round-trip. Surfaces `freeDemoExamId` so a
+   * "Try Free" link can go directly to POST /exams/:examId/attempts.
+   */
+  async getBySlug(identifier: string) {
+    let product = await this.products.findOne({
+      where: { slug: identifier, isPublished: true },
       relations: { exams: true, topics: true },
       order: { exams: { orderIndex: 'ASC' }, topics: { position: 'ASC' } },
     });
+    if (!product) {
+      // Fall back to cert code (ILIKE for case-insensitivity).
+      const byCode = await this.products
+        .createQueryBuilder('p')
+        .leftJoinAndSelect('p.exams', 'e')
+        .leftJoinAndSelect('p.topics', 't')
+        .where('p.is_published = true')
+        .andWhere('p.cert_code ILIKE :code', { code: identifier })
+        .orderBy('e.order_index', 'ASC')
+        .addOrderBy('t.position', 'ASC')
+        .getOne();
+      product = byCode ?? null;
+    }
     if (!product) throw new NotFoundException('Exam product not found');
+
     // Only expose published exam forms to the public.
     product.exams = (product.exams || []).filter((e) => e.isPublished);
-    return product;
+    const freeDemo = product.exams.find((e) => e.isFreeDemo);
+    return { ...product, freeDemoExamId: freeDemo?.id ?? null };
   }
 
   // ── Admin: products ───────────────────────────────

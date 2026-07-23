@@ -1,10 +1,12 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
+import { LessonContentType } from '../../common/enums';
 import { CourseModule } from './course-module.entity';
 
 /**
- * Iteration 1 stores only lesson titles + ordering. Iteration 2 adds
- * content_type, video_url, duration_seconds, is_preview, body.
+ * Iteration 1 uses only titles + ordering. The content columns below are
+ * provisioned now (all nullable) so the LMS in Iteration 2 can attach video /
+ * article / quiz content without a breaking migration.
  */
 @Entity('course_lessons')
 export class CourseLesson extends BaseEntity {
@@ -21,4 +23,20 @@ export class CourseLesson extends BaseEntity {
 
   @Column({ type: 'int', default: 0 })
   position: number;
+
+  // ── Iteration 2 (LMS) — provisioned, nullable ─────
+  @Column({ name: 'content_type', type: 'enum', enum: LessonContentType, nullable: true })
+  contentType: LessonContentType | null;
+
+  @Column({ name: 'video_url', type: 'varchar', length: 500, nullable: true })
+  videoUrl: string | null;
+
+  @Column({ name: 'duration_seconds', type: 'int', nullable: true })
+  durationSeconds: number | null;
+
+  @Column({ name: 'is_preview', type: 'boolean', default: false })
+  isPreview: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  body: string | null;
 }

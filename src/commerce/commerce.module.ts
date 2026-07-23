@@ -6,6 +6,7 @@ import { Order } from './entities/order.entity';
 import { OrderItem } from './entities/order-item.entity';
 import { Course } from '../courses/entities/course.entity';
 import { ExamProduct } from '../exam-catalog/entities/exam-product.entity';
+import { ExamVoucher } from '../vouchers/entities/exam-voucher.entity';
 import { CartService } from './cart.service';
 import { OrdersService } from './orders.service';
 import { PricingService } from './pricing.service';
@@ -21,6 +22,7 @@ import { PaymentsModule } from '../payments/payments.module';
       OrderItem,
       Course,
       ExamProduct,
+      ExamVoucher,
     ]),
     PaymentsModule,
   ],

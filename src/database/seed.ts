@@ -9,6 +9,7 @@ import { Exam } from '../exam-catalog/entities/exam.entity';
 import { Topic } from '../exam-catalog/entities/topic.entity';
 import { Question } from '../questions/entities/question.entity';
 import { QuestionOption } from '../questions/entities/question-option.entity';
+import { ExamVoucher } from '../vouchers/entities/exam-voucher.entity';
 import { hashPassword } from '../common/password.util';
 import {
   CourseCategory,
@@ -138,6 +139,7 @@ async function run() {
   const examRepo = AppDataSource.getRepository(Exam);
   const topicRepo = AppDataSource.getRepository(Topic);
   const questionRepo = AppDataSource.getRepository(Question);
+  const voucherRepo = AppDataSource.getRepository(ExamVoucher);
 
   // ── Admin ─────────────────────────────────────────
   const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@acecerty.com').toLowerCase();
@@ -365,6 +367,36 @@ async function run() {
       }
     }
   }
+
+  // ── Exam vouchers (from ExamVouchersPage) ─────────
+  const voucherSeed = [
+    { slug: 'comptia-security-plus-voucher', vendor: 'CompTIA', examName: 'Security+', examCode: 'SY0-701', price: 370, original: 404, badge: 'Best Seller', popular: true, color: '#c0392b' },
+    { slug: 'cisco-ccna-voucher', vendor: 'Cisco', examName: 'CCNA', examCode: '200-301', price: 330, original: 395, badge: 'Hot', popular: true, color: '#1ba0d8' },
+    { slug: 'isc2-cissp-voucher', vendor: 'ISC2', examName: 'CISSP', examCode: 'CISSP', price: 699, original: 749, badge: 'Gold Standard', popular: true, color: '#005f6b' },
+    { slug: 'aws-saa-voucher', vendor: 'AWS', examName: 'Solutions Architect Associate', examCode: 'SAA-C03', price: 150, original: 175, popular: true, color: '#ff9900' },
+    { slug: 'pmi-pmp-voucher', vendor: 'PMI', examName: 'PMP', examCode: 'PMP', price: 555, original: 605, badge: 'PMI Member Rate', color: '#2c5282' },
+  ];
+  for (const v of voucherSeed) {
+    const exists = await voucherRepo.findOne({ where: { slug: v.slug } });
+    if (!exists) {
+      await voucherRepo.save(
+        voucherRepo.create({
+          slug: v.slug,
+          vendor: v.vendor,
+          examName: v.examName,
+          examCode: v.examCode,
+          // Voucher prices on the frontend are USD-looking; store as NGN minor.
+          priceMinor: NGN(v.price),
+          originalPriceMinor: NGN(v.original),
+          badge: v.badge ?? null,
+          popular: v.popular ?? false,
+          color: v.color,
+          isPublished: true,
+        }),
+      );
+    }
+  }
+  console.log(`✓ Exam vouchers: ${voucherSeed.length}`);
 
   console.log('✔ Seed complete.');
   await AppDataSource.destroy();

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Course } from '../courses/entities/course.entity';
 import { ExamProduct } from '../exam-catalog/entities/exam-product.entity';
+import { ExamVoucher } from '../vouchers/entities/exam-voucher.entity';
 import { ItemType } from '../common/enums';
 
 export interface ResolvedItem {
@@ -21,6 +22,8 @@ export class PricingService {
     @InjectRepository(Course) private readonly courses: Repository<Course>,
     @InjectRepository(ExamProduct)
     private readonly products: Repository<ExamProduct>,
+    @InjectRepository(ExamVoucher)
+    private readonly vouchers: Repository<ExamVoucher>,
   ) {}
 
   async resolve(itemType: ItemType, itemId: string): Promise<ResolvedItem> {
@@ -34,6 +37,19 @@ export class PricingService {
         unitPriceMinor: Number(p.priceMinor),
         currency: p.currency,
         accessDurationDays: p.accessDurationDays,
+      };
+    }
+    if (itemType === ItemType.EXAM_VOUCHER) {
+      const v = await this.vouchers.findOne({ where: { id: itemId } });
+      if (!v) throw new BadRequestException(`Exam voucher ${itemId} not found`);
+      return {
+        itemType,
+        itemId,
+        title: `${v.vendor} ${v.examName} Exam Voucher`,
+        unitPriceMinor: Number(v.priceMinor),
+        currency: v.currency,
+        // Voucher ownership is perpetual; the code is delivered out-of-band.
+        accessDurationDays: null,
       };
     }
     const c = await this.courses.findOne({ where: { id: itemId } });

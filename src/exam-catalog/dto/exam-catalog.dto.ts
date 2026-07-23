@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -14,10 +15,10 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 
 // ── Exam product ──────────────────────────────────────
 export class CreateExamProductDto {
-  @IsString() @IsNotEmpty() slug: string;
-  @IsString() certName: string;
-  @IsString() certCode: string;
-  @IsString() domain: string;
+  @IsString() @IsNotEmpty() @MaxLength(160) slug: string;
+  @IsString() @MaxLength(160) certName: string;
+  @IsString() @MaxLength(80) certCode: string;
+  @IsString() @MaxLength(80) domain: string;
 
   @IsOptional() @IsEnum(Difficulty) difficulty?: Difficulty;
   @IsOptional() @IsString() description?: string;

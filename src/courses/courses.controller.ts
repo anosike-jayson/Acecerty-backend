@@ -8,9 +8,13 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { CoursesService } from './courses.service';
 import {
   CreateCourseDto,
@@ -28,11 +32,27 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UserRole } from '../common/enums';
 import { PublishDto } from '../common/dto/publish.dto';
+import {
+  imageUploadOptions,
+  publicUploadUrl,
+} from '../common/uploads/image-upload';
 
 @ApiTags('Courses')
 @Controller()
 export class CoursesController {
-  constructor(private readonly service: CoursesService) {}
+  constructor(
+    private readonly service: CoursesService,
+    private readonly config: ConfigService,
+  ) {}
+
+  private applyThumbnail(dto: CreateCourseDto | UpdateCourseDto, file?: any) {
+    // Swagger-only field — never persist it.
+    delete (dto as any).thumbnail;
+    if (file) {
+      const base = this.config.get<string>('appBaseUrl')!;
+      (dto as any).imageUrl = publicUploadUrl(base, file.filename);
+    }
+  }
 
   // ── Public read ───────────────────────────────────
   @Public()
@@ -65,14 +85,24 @@ export class CoursesController {
   @Post('admin/courses')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  create(@Body() dto: CreateCourseDto) {
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @UseInterceptors(FileInterceptor('thumbnail', imageUploadOptions))
+  create(@Body() dto: CreateCourseDto, @UploadedFile() thumbnail?: any) {
+    this.applyThumbnail(dto, thumbnail);
     return this.service.create(dto);
   }
 
   @Patch('admin/courses/:id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateCourseDto) {
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @UseInterceptors(FileInterceptor('thumbnail', imageUploadOptions))
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCourseDto,
+    @UploadedFile() thumbnail?: any,
+  ) {
+    this.applyThumbnail(dto, thumbnail);
     return this.service.update(id, dto);
   }
 

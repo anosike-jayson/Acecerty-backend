@@ -61,6 +61,7 @@ export enum AttemptStatus {
 export enum ItemType {
   EXAM_PRODUCT = 'exam_product',
   COURSE = 'course',
+  EXAM_VOUCHER = 'exam_voucher',
 }
 
 export enum OrderStatus {
@@ -85,5 +86,39 @@ export enum PaymentStatus {
 export enum EntitlementStatus {
   ACTIVE = 'active',
   EXPIRED = 'expired',
+  REVOKED = 'revoked',
+}
+
+// ── Leads (contact / instructor applications) ────────
+export enum LeadType {
+  INSTRUCTOR_APPLICATION = 'instructor_application',
+  NEWSLETTER = 'newsletter',
+  CONTACT = 'contact',
+}
+
+export enum LeadStatus {
+  NEW = 'new',
+  IN_REVIEW = 'in_review',
+  CONTACTED = 'contacted',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  ARCHIVED = 'archived',
+}
+
+// ── LMS provisioning (Iteration 2 — modelled now) ────
+export enum LessonContentType {
+  VIDEO = 'video',
+  ARTICLE = 'article',
+  QUIZ = 'quiz',
+}
+
+export enum LessonProgressStatus {
+  NOT_STARTED = 'not_started',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+}
+
+export enum CertificateStatus {
+  ISSUED = 'issued',
   REVOKED = 'revoked',
 }

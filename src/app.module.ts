@@ -22,6 +22,9 @@ import { PaymentsModule } from './payments/payments.module';
 import { CommerceModule } from './commerce/commerce.module';
 import { AdminModule } from './admin/admin.module';
 import { UploadsModule } from './common/uploads/uploads.module';
+import { VouchersModule } from './vouchers/vouchers.module';
+import { LeadsModule } from './leads/leads.module';
+import { LearningModule } from './learning/learning.module';
 
 @Module({
   imports: [
@@ -46,6 +49,9 @@ import { UploadsModule } from './common/uploads/uploads.module';
     ExamEngineModule,
     PaymentsModule,
     CommerceModule,
+    VouchersModule,
+    LeadsModule,
+    LearningModule,
     AdminModule,
     UploadsModule,
   ],

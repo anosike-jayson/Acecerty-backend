@@ -7,16 +7,12 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { randomBytes } from 'crypto';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Roles } from '../decorators/roles.decorator';
 import { RolesGuard } from '../guards/roles.guard';
 import { UserRole } from '../enums';
-
-const IMAGE_MIME = /^(image\/(png|jpe?g|webp|gif|svg\+xml))$/;
+import { imageUploadOptions, publicUploadUrl } from './image-upload';
 
 /**
  * Local-disk image upload for Iteration 1. Swap the storage engine for
@@ -30,31 +26,23 @@ export class UploadsController {
   constructor(private readonly config: ConfigService) {}
 
   @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: process.env.UPLOAD_DIR || 'uploads',
-        filename: (_req, file, cb) => {
-          const name = `${Date.now()}-${randomBytes(6).toString('hex')}${extname(
-            file.originalname,
-          )}`;
-          cb(null, name);
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-      fileFilter: (_req, file, cb) => {
-        if (!IMAGE_MIME.test(file.mimetype)) {
-          return cb(new BadRequestException('Only image files are allowed'), false);
-        }
-        cb(null, true);
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Image file (png/jpg/webp/gif/svg, max 5 MB)',
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
       },
-    }),
-  )
+    },
+  })
+  @UseInterceptors(FileInterceptor('file', imageUploadOptions))
   upload(@UploadedFile() file: any) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const base = this.config.get<string>('appBaseUrl');
+    const base = this.config.get<string>('appBaseUrl')!;
     return {
-      url: `${base}/uploads/${file.filename}`,
+      url: publicUploadUrl(base, file.filename),
       filename: file.filename,
       size: file.size,
       mimetype: file.mimetype,
