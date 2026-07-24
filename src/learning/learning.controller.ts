@@ -21,7 +21,6 @@ import { UserRole } from '../common/enums';
 export class LearningController {
   constructor(private readonly learning: LearningService) {}
 
-  // ── Student dashboard ─────────────────────────────
   @Get('me/dashboard')
   dashboard(@CurrentUser() user: AuthUser) {
     return this.learning.dashboard(user.id);
@@ -40,7 +39,6 @@ export class LearningController {
     return this.learning.courseProgress(user.id, courseId);
   }
 
-  // ── Lesson progress (Iteration 2 provisioning) ────
   @Patch('me/lessons/:lessonId/progress')
   updateProgress(
     @CurrentUser() user: AuthUser,
@@ -50,7 +48,6 @@ export class LearningController {
     return this.learning.updateProgress(user.id, lessonId, dto);
   }
 
-  // ── Admin certificate issuance ────────────────────
   @Post('admin/certificates')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
